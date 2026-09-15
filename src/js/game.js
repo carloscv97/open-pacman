@@ -12,6 +12,7 @@ const OPPOSITE = { left: 'right', right: 'left', up: 'down', down: 'up' };
 
 const PACMAN_SPEED = 0.125; // 1/8 celda/frame -> alinea cada 8 frames
 const GHOST_SPEED = 0.1;    // 1/10 celda/frame
+const FRIGHTENED_MS = 6000;
 
 // Crea una partida nueva. Copia MAZE (pristino) a game.grid para poder comer
 // dots sin destruir el original, y reiniciar.
@@ -20,14 +21,15 @@ function createGame() {
   // La celda de inicio de Pacman arranca sin dot.
   grid[ PACMAN_START.y ][ PACMAN_START.x ] = 0;
 
-  let dots = 0;
-  for ( const row of grid ) for ( const v of row ) if ( v === 2 ) dots++;
+  let collectibles = 0;
+  for ( const row of grid ) for ( const v of row ) if ( v === 2 || v === 4 ) collectibles++;
 
   return {
     state: 'start',
     score: 0,
     lives: 3,
-    dotsRemaining: dots,
+    collectiblesRemaining: collectibles,
+    frightenedUntil: null,
     releaseStartedAt: null,
     grid,
     pacman: {
@@ -44,6 +46,8 @@ function createGame() {
       speed: GHOST_SPEED,
       kind: g.kind,
       released: false,
+      releaseAt: null,
+      frightenedBlocked: false,
     } ) ),
   };
 }
@@ -82,7 +86,7 @@ function wrapTunnel( a, width ) {
   }
 }
 
-function movePacman( game ) {
+function movePacman( game, now ) {
   const p = game.pacman;
   const grid = game.grid;
   const width = grid[ 0 ].length;
@@ -96,11 +100,18 @@ function movePacman( game ) {
       p.dir = p.nextDir;
       p.nextDir = null;
     }
-    // Comer dot.
-    if ( grid[ p.y ][ p.x ] === 2 ) {
+    // Comer dot o power pellet.
+    const tile = grid[ p.y ][ p.x ];
+    if ( tile === 2 || tile === 4 ) {
       grid[ p.y ][ p.x ] = 0;
-      game.score += 10;
-      game.dotsRemaining--;
+      game.score += tile === 2 ? 10 : 50;
+      game.collectiblesRemaining--;
+      if ( tile === 4 ) {
+        game.frightenedUntil = now + FRIGHTENED_MS;
+        game.ghosts.forEach( ( g ) => {
+          if ( g.released ) g.frightenedBlocked = false;
+        } );
+      }
     }
     // Si no puede seguir, se detiene en la celda.
     if ( !canMove( grid, p.x, p.y, p.dir, 'pacman' ) ) return;
@@ -183,6 +194,8 @@ function resetPositions( game ) {
     g.y = GHOST_STARTS[ i ].y;
     g.dir = 'up';
     g.released = false;
+    g.releaseAt = null;
+    g.frightenedBlocked = false;
   } );
 }
 
@@ -191,20 +204,38 @@ function collides( a, b ) {
 }
 
 function update( game, now ) {
+  if ( game.frightenedUntil !== null && now >= game.frightenedUntil ) {
+    game.frightenedUntil = null;
+  }
   if ( game.releaseStartedAt === null ) game.releaseStartedAt = now;
   const releasedCount = Math.min(
     game.ghosts.length,
     Math.floor( ( now - game.releaseStartedAt ) / 1500 ) + 1
   );
   game.ghosts.forEach( ( g, i ) => {
-    g.released = i < releasedCount;
+    if ( g.releaseAt !== null ) {
+      if ( now >= g.releaseAt ) {
+        g.released = true;
+        g.releaseAt = null;
+      } else g.released = false;
+    } else g.released = i < releasedCount;
   } );
 
-  movePacman( game );
+  movePacman( game, now );
   game.ghosts.forEach( ( g ) => moveGhost( game, g ) );
 
-  for ( const g of game.ghosts ) {
+  for ( const [ i, g ] of game.ghosts.entries() ) {
     if ( g.released && collides( game.pacman, g ) ) {
+      if ( game.frightenedUntil !== null && !g.frightenedBlocked ) {
+        game.score += 200;
+        g.x = GHOST_STARTS[ i ].x;
+        g.y = GHOST_STARTS[ i ].y;
+        g.dir = 'up';
+        g.released = false;
+        g.releaseAt = now + 1500;
+        g.frightenedBlocked = true;
+        continue;
+      }
       game.lives--;
       if ( game.lives <= 0 ) {
         game.state = 'lost';
@@ -215,7 +246,7 @@ function update( game, now ) {
     }
   }
 
-  if ( game.dotsRemaining <= 0 ) game.state = 'won';
+  if ( game.collectiblesRemaining <= 0 ) game.state = 'won';
 }
 
 window.createGame = createGame;

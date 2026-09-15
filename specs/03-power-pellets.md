@@ -1,6 +1,6 @@
 # SPEC 03 - Power pellets y fantasmas vulnerables
 
-> **Estado:** Draft
+> **Estado:** Approved
 > **Depende de:** SPEC 01, SPEC 02
 > **Fecha:** 2026-09-15
 > **Objetivo:** Anadir cuatro power pellets en las esquinas interiores para volver vulnerables y comibles a los fantasmas durante seis segundos.
@@ -85,12 +85,12 @@ Al comerlo, `releaseAt` se fija a 1500 ms despues del reloj de simulacion actual
 
 ## Riesgos
 
-| Riesgo | Mitigacion |
-| --- | --- |
-| Un pellet se consume sin contar para la victoria. | Contar los tipos `2` y `4` en el unico contador de coleccionables. |
-| Un fantasma comido colisiona durante su reaparicion. | Mantenerlo no liberado y excluirlo de colisiones hasta su nueva salida. |
-| El temporizador depende de los FPS o expira al volver de otra pestana. | Usar el reloj de simulacion fijo definido en SPEC 02. |
-| El color vulnerable no se distingue del color propio de un fantasma. | Usar azul comun y alternancia a blanco en el ultimo segundo para todos los tipos. |
+| Riesgo                                                                 | Mitigacion                                                                        |
+| ---------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Un pellet se consume sin contar para la victoria.                      | Contar los tipos `2` y `4` en el unico contador de coleccionables.                |
+| Un fantasma comido colisiona durante su reaparicion.                   | Mantenerlo no liberado y excluirlo de colisiones hasta su nueva salida.           |
+| El temporizador depende de los FPS o expira al volver de otra pestana. | Usar el reloj de simulacion fijo definido en SPEC 02.                             |
+| El color vulnerable no se distingue del color propio de un fantasma.   | Usar azul comun y alternancia a blanco en el ultimo segundo para todos los tipos. |
 
 ## Lo que **no** incluye esta especificacion
 
