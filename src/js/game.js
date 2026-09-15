@@ -20,14 +20,14 @@ function createGame() {
   // La celda de inicio de Pacman arranca sin dot.
   grid[ PACMAN_START.y ][ PACMAN_START.x ] = 0;
 
-  let dots = 0;
-  for ( const row of grid ) for ( const v of row ) if ( v === 2 ) dots++;
+  let collectibles = 0;
+  for ( const row of grid ) for ( const v of row ) if ( v === 2 || v === 4 ) collectibles++;
 
   return {
     state: 'start',
     score: 0,
     lives: 3,
-    dotsRemaining: dots,
+    collectiblesRemaining: collectibles,
     releaseStartedAt: null,
     grid,
     pacman: {
@@ -96,11 +96,12 @@ function movePacman( game ) {
       p.dir = p.nextDir;
       p.nextDir = null;
     }
-    // Comer dot.
-    if ( grid[ p.y ][ p.x ] === 2 ) {
+    // Comer dot o power pellet.
+    const tile = grid[ p.y ][ p.x ];
+    if ( tile === 2 || tile === 4 ) {
       grid[ p.y ][ p.x ] = 0;
-      game.score += 10;
-      game.dotsRemaining--;
+      game.score += tile === 2 ? 10 : 50;
+      game.collectiblesRemaining--;
     }
     // Si no puede seguir, se detiene en la celda.
     if ( !canMove( grid, p.x, p.y, p.dir, 'pacman' ) ) return;
@@ -215,7 +216,7 @@ function update( game, now ) {
     }
   }
 
-  if ( game.dotsRemaining <= 0 ) game.state = 'won';
+  if ( game.collectiblesRemaining <= 0 ) game.state = 'won';
 }
 
 window.createGame = createGame;
