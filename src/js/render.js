@@ -70,10 +70,11 @@ function drawDots( ctx, grid ) {
   ctx.fillStyle = DOT_COLOR;
   for ( let y = 0; y < grid.length; y++ ) {
     for ( let x = 0; x < grid[ 0 ].length; x++ ) {
-      if ( grid[ y ][ x ] !== 2 ) continue;
+      const tile = grid[ y ][ x ];
+      if ( tile !== 2 && tile !== 4 ) continue;
       const { cx, cy } = cellCenter( x, y );
       ctx.beginPath();
-      ctx.arc( cx, cy, 2.5, 0, Math.PI * 2 );
+      ctx.arc( cx, cy, tile === 2 ? 2.5 : 6, 0, Math.PI * 2 );
       ctx.fill();
     }
   }
@@ -98,7 +99,7 @@ function drawPacman( ctx, p, frame ) {
   ctx.fill();
 }
 
-function drawGhost( ctx, g, color ) {
+function drawGhost( ctx, g, color, frightened ) {
   const { cx, cy } = cellCenter( g.x, g.y );
   const r = TILE / 2 - 1;
   const top = cy - r;
@@ -106,7 +107,7 @@ function drawGhost( ctx, g, color ) {
   const left = cx - r;
   const right = cx + r;
 
-  ctx.fillStyle = color;
+  ctx.fillStyle = frightened ? '#2121ff' : color;
   ctx.beginPath();
   ctx.arc( cx, cy - 1, r, Math.PI, 0, false ); // cabeza
   ctx.lineTo( right, bottom );
@@ -146,7 +147,7 @@ function drawHUD( ctx, game, W ) {
 
 const GHOST_COLORS = [ '#ff0000', '#00ffff', '#ffb8ff', '#ffb852' ];
 
-function draw( ctx, game, frame ) {
+function draw( ctx, game, frame, now ) {
   const grid = game.grid;
   const W = grid[ 0 ].length;
   const H = grid.length;
@@ -158,7 +159,12 @@ function draw( ctx, game, frame ) {
   drawDoor( ctx, grid );
   drawDots( ctx, grid );
   drawPacman( ctx, game.pacman, frame );
-  game.ghosts.forEach( ( g, i ) => drawGhost( ctx, g, GHOST_COLORS[ i ] || '#ff0000' ) );
+  game.ghosts.forEach( ( g, i ) => {
+    const remaining = game.frightenedUntil === null ? 0 : game.frightenedUntil - now;
+    const frightened = g.released && !g.frightenedBlocked && remaining > 0;
+    const flashWhite = frightened && remaining <= 1000 && Math.floor( now / 250 ) % 2 === 0;
+    drawGhost( ctx, g, flashWhite ? '#fff' : GHOST_COLORS[ i ] || '#ff0000', frightened && !flashWhite );
+  } );
   drawHUD( ctx, game, W );
 }
 

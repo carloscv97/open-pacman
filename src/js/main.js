@@ -62,7 +62,7 @@ function loop( now ) {
     else if ( game.state === 'lost' ) showOverlay( 'PERDISTE', 'lose', 'Reiniciar' );
   } else accumulator = 0;
   lastNow = now;
-  draw( ctx, game, frame );
+  draw( ctx, game, frame, simulationNow );
   requestAnimationFrame( loop );
 }
 
