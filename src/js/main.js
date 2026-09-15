@@ -46,10 +46,16 @@ if ( actionBtn ) actionBtn.addEventListener( 'click', startGame );
 function loop( now ) {
   frame++;
   if ( game.state === 'playing' ) {
-    update( game, now );
+    if ( lastNow !== null ) accumulator += now - lastNow;
+    while ( accumulator >= STEP_MS && game.state === 'playing' ) {
+      simulationNow += STEP_MS;
+      update( game, simulationNow );
+      accumulator -= STEP_MS;
+    }
     if ( game.state === 'won' ) showOverlay( 'GANASTE', 'win', 'Reiniciar' );
     else if ( game.state === 'lost' ) showOverlay( 'PERDISTE', 'lose', 'Reiniciar' );
-  }
+  } else accumulator = 0;
+  lastNow = now;
   draw( ctx, game, frame );
   requestAnimationFrame( loop );
 }
