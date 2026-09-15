@@ -44,12 +44,12 @@ function startGame() {
 if ( actionBtn ) actionBtn.addEventListener( 'click', startGame );
 
 function loop( now ) {
-  frame++;
   if ( game.state === 'playing' ) {
     if ( lastNow !== null ) accumulator += now - lastNow;
     while ( accumulator >= STEP_MS && game.state === 'playing' ) {
       simulationNow += STEP_MS;
       update( game, simulationNow );
+      frame++;
       accumulator -= STEP_MS;
     }
     if ( game.state === 'won' ) showOverlay( 'GANASTE', 'win', 'Reiniciar' );
