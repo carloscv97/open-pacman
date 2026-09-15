@@ -46,6 +46,8 @@ function createGame() {
       speed: GHOST_SPEED,
       kind: g.kind,
       released: false,
+      releaseAt: null,
+      frightenedBlocked: false,
     } ) ),
   };
 }
@@ -104,7 +106,12 @@ function movePacman( game, now ) {
       grid[ p.y ][ p.x ] = 0;
       game.score += tile === 2 ? 10 : 50;
       game.collectiblesRemaining--;
-      if ( tile === 4 ) game.frightenedUntil = now + FRIGHTENED_MS;
+      if ( tile === 4 ) {
+        game.frightenedUntil = now + FRIGHTENED_MS;
+        game.ghosts.forEach( ( g ) => {
+          if ( g.released ) g.frightenedBlocked = false;
+        } );
+      }
     }
     // Si no puede seguir, se detiene en la celda.
     if ( !canMove( grid, p.x, p.y, p.dir, 'pacman' ) ) return;
@@ -187,6 +194,8 @@ function resetPositions( game ) {
     g.y = GHOST_STARTS[ i ].y;
     g.dir = 'up';
     g.released = false;
+    g.releaseAt = null;
+    g.frightenedBlocked = false;
   } );
 }
 
@@ -204,14 +213,29 @@ function update( game, now ) {
     Math.floor( ( now - game.releaseStartedAt ) / 1500 ) + 1
   );
   game.ghosts.forEach( ( g, i ) => {
-    g.released = i < releasedCount;
+    if ( g.releaseAt !== null ) {
+      if ( now >= g.releaseAt ) {
+        g.released = true;
+        g.releaseAt = null;
+      } else g.released = false;
+    } else g.released = i < releasedCount;
   } );
 
   movePacman( game, now );
   game.ghosts.forEach( ( g ) => moveGhost( game, g ) );
 
-  for ( const g of game.ghosts ) {
+  for ( const [ i, g ] of game.ghosts.entries() ) {
     if ( g.released && collides( game.pacman, g ) ) {
+      if ( game.frightenedUntil !== null && !g.frightenedBlocked ) {
+        game.score += 200;
+        g.x = GHOST_STARTS[ i ].x;
+        g.y = GHOST_STARTS[ i ].y;
+        g.dir = 'up';
+        g.released = false;
+        g.releaseAt = now + 1500;
+        g.frightenedBlocked = true;
+        continue;
+      }
       game.lives--;
       if ( game.lives <= 0 ) {
         game.state = 'lost';
