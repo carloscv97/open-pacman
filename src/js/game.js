@@ -144,13 +144,18 @@ function decideGhost( game, g ) {
 }
 
 function moveGhost( game, g ) {
+  if ( !g.released ) return;
+
   const grid = game.grid;
   const width = grid[ 0 ].length;
 
   if ( aligned( g.x ) && aligned( g.y ) ) {
     g.x = Math.round( g.x );
     g.y = Math.round( g.y );
-    decideGhost( game, g );
+    if ( g.y === 14 && g.x === 12 ) g.dir = 'right';
+    else if ( g.y === 14 && g.x === 15 ) g.dir = 'left';
+    else if ( g.y >= 12 && g.y <= 14 && ( g.x === 13 || g.x === 14 ) ) g.dir = 'up';
+    else decideGhost( game, g );
     if ( !canMove( grid, g.x, g.y, g.dir, 'ghost' ) ) return;
   }
 
@@ -179,12 +184,21 @@ function collides( a, b ) {
   return Math.abs( a.x - b.x ) < 0.5 && Math.abs( a.y - b.y ) < 0.5;
 }
 
-function update( game ) {
+function update( game, now ) {
+  if ( game.releaseStartedAt === null ) game.releaseStartedAt = now;
+  const releasedCount = Math.min(
+    game.ghosts.length,
+    Math.floor( ( now - game.releaseStartedAt ) / 1500 ) + 1
+  );
+  game.ghosts.forEach( ( g, i ) => {
+    g.released = i < releasedCount;
+  } );
+
   movePacman( game );
   game.ghosts.forEach( ( g ) => moveGhost( game, g ) );
 
   for ( const g of game.ghosts ) {
-    if ( collides( game.pacman, g ) ) {
+    if ( g.released && collides( game.pacman, g ) ) {
       game.lives--;
       if ( game.lives <= 0 ) {
         game.state = 'lost';
