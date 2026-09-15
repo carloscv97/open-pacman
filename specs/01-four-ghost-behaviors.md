@@ -1,6 +1,6 @@
 # SPEC 01 - Cuatro comportamientos de fantasmas
 
-> **Estado:** Approved
+> **Estado:** Implemented
 > **Depende de:** Ninguna
 > **Fecha:** 2026-09-15
 > **Objetivo:** Incorporar cuatro fantasmas con comportamientos de movimiento distintos y liberarlos escalonadamente desde la jaula.
