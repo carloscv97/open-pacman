@@ -12,6 +12,7 @@ const OPPOSITE = { left: 'right', right: 'left', up: 'down', down: 'up' };
 
 const PACMAN_SPEED = 0.125; // 1/8 celda/frame -> alinea cada 8 frames
 const GHOST_SPEED = 0.1;    // 1/10 celda/frame
+const FRIGHTENED_MS = 6000;
 
 // Crea una partida nueva. Copia MAZE (pristino) a game.grid para poder comer
 // dots sin destruir el original, y reiniciar.
@@ -28,6 +29,7 @@ function createGame() {
     score: 0,
     lives: 3,
     collectiblesRemaining: collectibles,
+    frightenedUntil: null,
     releaseStartedAt: null,
     grid,
     pacman: {
@@ -82,7 +84,7 @@ function wrapTunnel( a, width ) {
   }
 }
 
-function movePacman( game ) {
+function movePacman( game, now ) {
   const p = game.pacman;
   const grid = game.grid;
   const width = grid[ 0 ].length;
@@ -102,6 +104,7 @@ function movePacman( game ) {
       grid[ p.y ][ p.x ] = 0;
       game.score += tile === 2 ? 10 : 50;
       game.collectiblesRemaining--;
+      if ( tile === 4 ) game.frightenedUntil = now + FRIGHTENED_MS;
     }
     // Si no puede seguir, se detiene en la celda.
     if ( !canMove( grid, p.x, p.y, p.dir, 'pacman' ) ) return;
@@ -192,6 +195,9 @@ function collides( a, b ) {
 }
 
 function update( game, now ) {
+  if ( game.frightenedUntil !== null && now >= game.frightenedUntil ) {
+    game.frightenedUntil = null;
+  }
   if ( game.releaseStartedAt === null ) game.releaseStartedAt = now;
   const releasedCount = Math.min(
     game.ghosts.length,
@@ -201,7 +207,7 @@ function update( game, now ) {
     g.released = i < releasedCount;
   } );
 
-  movePacman( game );
+  movePacman( game, now );
   game.ghosts.forEach( ( g ) => moveGhost( game, g ) );
 
   for ( const g of game.ghosts ) {
