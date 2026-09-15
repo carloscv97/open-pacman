@@ -1,6 +1,6 @@
 # SPEC 02 - Actualizacion fija del juego
 
-> **Estado:** Approved
+> **Estado:** Implemented
 > **Depende de:** Ninguna
 > **Fecha:** 2026-09-15
 > **Objetivo:** Ejecutar la simulacion y la animacion del juego a 60 actualizaciones por segundo sin que la frecuencia de pantalla altere su velocidad.

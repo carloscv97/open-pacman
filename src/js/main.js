@@ -43,6 +43,12 @@ function startGame() {
 
 if ( actionBtn ) actionBtn.addEventListener( 'click', startGame );
 
+document.addEventListener( 'visibilitychange', () => {
+  if ( !document.hidden ) return;
+  accumulator = 0;
+  lastNow = null;
+} );
+
 function loop( now ) {
   if ( game.state === 'playing' ) {
     if ( lastNow !== null ) accumulator += now - lastNow;
