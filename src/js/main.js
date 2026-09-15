@@ -8,6 +8,10 @@ const actionBtn = document.getElementById( 'action-btn' );
 
 let game = createGame();
 let frame = 0;
+const STEP_MS = 1000 / 60;
+let lastNow = null;
+let accumulator = 0;
+let simulationNow = 0;
 
 const KEY_DIR = {
   ArrowLeft: 'left',
